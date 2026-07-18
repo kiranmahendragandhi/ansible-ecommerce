@@ -1,0 +1,36 @@
+name: Deploy Infrastructure
+on:
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Lint Tools
+        run: |
+          pip install ansible ansible-lint yamllint
+
+      - name: Validate Ansible Spacing and Formatting
+        run: |
+          ansible-lint site.yml
+
+  dry-run:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Execute Playbook Dry-Run Simulation
+        run: |
+          echo "${{ secrets.VAULT_PASSWORD }}" > .vault_pass.txt
+          ansible-playbook -i inventories/prod/hosts.ini site.yml --vault-password-file .vault_pass.txt --check --diff
