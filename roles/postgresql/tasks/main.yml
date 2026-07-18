@@ -1,0 +1,25 @@
+---
+- name: Install PostgreSQL database package array
+  apt:
+    name:
+      - postgresql
+      - python3-psycopg2
+    state: present
+
+- name: Ensure PostgreSQL service is active and boots automatically
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Create the production ecommerce database schema
+  shell: "su - postgres -c \"psql -c 'CREATE DATABASE ecommerce_db;'\""
+  register: db_create
+  failed_when: db_create.rc != 0 and 'already exists' not in db_create.stderr
+  changed_when: "'CREATE DATABASE' in db_create.stdout"
+
+- name: Create the application service connection account user
+  shell: "su - postgres -c \"psql -c \\\"CREATE USER db_app_user WITH PASSWORD 'SecurePassword123'; GRANT ALL PRIVILEGES ON DATABASE ecommerce_db TO db_app_user;\\\"\""
+  register: user_create
+  failed_when: user_create.rc != 0 and 'already exists' not in user_create.stderr
+  changed_when: "'CREATE USER' in user_create.stdout or 'GRANT' in user_create.stdout"

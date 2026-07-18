@@ -6,7 +6,11 @@
   tasks:
     - name: Synchronize time and install core networking utilities
       apt:
-        name: [curl, htop, unzip, ntp]
+        name:
+          - curl
+          - htop
+          - unzip
+          - ntp
         state: present
         update_cache: true
 
