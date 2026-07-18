@@ -1,0 +1,30 @@
+---
+- name: Stage 1 - Run baseline configurations on all servers
+  hosts: all
+  become: true
+  serial: 1
+  tasks:
+    - name: Synchronize time and install core networking utilities
+      apt:
+        name: [curl, htop, unzip, ntp]
+        state: present
+        update_cache: true
+
+- name: Stage 2 - Deploy database layer engine
+  hosts: db
+  become: true
+  roles:
+    - postgresql
+
+- name: Stage 3 - Deploy rolling web application layer
+  hosts: app
+  become: true
+  serial: 1
+  roles:
+    - app
+
+- name: Stage 4 - Deploy load distribution routing layer
+  hosts: lb
+  become: true
+  roles:
+    - haproxy
